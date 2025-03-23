@@ -1,53 +1,25 @@
 package com.ecommerce.payment.infrastructure.service
 
-import com.ecommerce.payment.domain.model.PaymentMethodType
-import com.stripe.exception.StripeException
+import com.stripe.model.Charge
 import com.stripe.model.PaymentIntent
-import com.stripe.model.PaymentMethod
-import com.stripe.param.PaymentIntentCreateParams
-import com.stripe.param.PaymentMethodCreateParams
-import org.springframework.stereotype.Service
+import com.stripe.model.Refund
 import java.math.BigDecimal
-import org.slf4j.LoggerFactory
 
-@Service
-class StripeService {
-    
-    private val logger = LoggerFactory.getLogger(StripeService::class.java)
-    
-    /**
-     * Cria um token de método de pagamento no Stripe
-     */
-    fun createPaymentMethod(
-        type: PaymentMethodType,
-        cardNumber: String,
-        expMonth: Int,
-        expYear: Int,
-        cvc: String,
-        name: String
-    ): PaymentMethod {
-        try {
-            val cardParams = PaymentMethodCreateParams.CardDetails.builder()
-                .setNumber(cardNumber)
-                .setExpMonth(expMonth.toLong())
-                .setExpYear(expYear.toLong())
-                .setCvc(cvc)
-                .build()
-            
-            val params = PaymentMethodCreateParams.builder()
-                .setType(PaymentMethodCreateParams.Type.CARD)
-                .setCard(cardParams)
-                .build()
-            
-            return PaymentMethod.create(params)
-        } catch (e: StripeException) {
-            logger.error("Erro ao criar método de pagamento no Stripe", e)
-            throw RuntimeException("Falha ao processar cartão de crédito: ${e.message}")
-        }
-    }
+/**
+ * Interface para serviços de integração com Stripe
+ * Permite diferentes implementações (produção e teste)
+ */
+interface StripeService {
     
     /**
-     * Cria uma intenção de pagamento no Stripe
+     * Cria um PaymentIntent no Stripe
+     *
+     * @param amount Valor do pagamento
+     * @param currency Moeda (ex: "brl", "usd")
+     * @param paymentMethodId ID do método de pagamento no Stripe
+     * @param description Descrição do pagamento
+     * @param orderId ID do pedido relacionado
+     * @return PaymentIntent criado
      */
     fun createPaymentIntent(
         amount: BigDecimal,
@@ -55,50 +27,46 @@ class StripeService {
         paymentMethodId: String,
         description: String,
         orderId: String
-    ): PaymentIntent {
-        try {
-            // Convertendo para centavos (Stripe trabalha com a menor unidade monetária)
-            val amountInCents = (amount.multiply(BigDecimal(100))).toLong()
-            
-            val params = PaymentIntentCreateParams.builder()
-                .setAmount(amountInCents)
-                .setCurrency(currency.toLowerCase())
-                .setPaymentMethod(paymentMethodId)
-                .setDescription(description)
-                .putMetadata("orderId", orderId)
-                .setConfirm(true)
-                .build()
-            
-            return PaymentIntent.create(params)
-        } catch (e: StripeException) {
-            logger.error("Erro ao criar intenção de pagamento no Stripe", e)
-            throw RuntimeException("Falha ao processar pagamento: ${e.message}")
-        }
-    }
+    ): PaymentIntent
     
     /**
-     * Confirma um pagamento no Stripe
+     * Confirma um PaymentIntent existente
+     *
+     * @param paymentIntentId ID do PaymentIntent
+     * @return PaymentIntent confirmado
      */
-    fun confirmPayment(paymentIntentId: String): PaymentIntent {
-        try {
-            val paymentIntent = PaymentIntent.retrieve(paymentIntentId)
-            return paymentIntent.confirm()
-        } catch (e: StripeException) {
-            logger.error("Erro ao confirmar pagamento no Stripe", e)
-            throw RuntimeException("Falha ao confirmar pagamento: ${e.message}")
-        }
-    }
+    fun confirmPaymentIntent(paymentIntentId: String): PaymentIntent
     
     /**
-     * Cancela um pagamento no Stripe
+     * Cancela um PaymentIntent
+     *
+     * @param paymentIntentId ID do PaymentIntent
+     * @return PaymentIntent cancelado
      */
-    fun cancelPayment(paymentIntentId: String): PaymentIntent {
-        try {
-            val paymentIntent = PaymentIntent.retrieve(paymentIntentId)
-            return paymentIntent.cancel()
-        } catch (e: StripeException) {
-            logger.error("Erro ao cancelar pagamento no Stripe", e)
-            throw RuntimeException("Falha ao cancelar pagamento: ${e.message}")
-        }
-    }
+    fun cancelPayment(paymentIntentId: String): PaymentIntent
+    
+    /**
+     * Reembolsa um pagamento
+     *
+     * @param paymentIntentId ID do PaymentIntent
+     * @param amount Valor a ser reembolsado (null para reembolso total)
+     * @return Objeto Refund criado
+     */
+    fun refundPayment(paymentIntentId: String, amount: BigDecimal? = null): Refund
+    
+    /**
+     * Obtém um PaymentIntent pelo ID
+     *
+     * @param paymentIntentId ID do PaymentIntent
+     * @return PaymentIntent encontrado
+     */
+    fun getPaymentIntent(paymentIntentId: String): PaymentIntent
+    
+    /**
+     * Obtém uma cobrança pelo ID
+     *
+     * @param chargeId ID da cobrança
+     * @return Objeto Charge encontrado
+     */
+    fun getCharge(chargeId: String): Charge
 } 
