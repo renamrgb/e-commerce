@@ -48,6 +48,24 @@ dependencies {
     // Stripe Payment Integration
     implementation("com.stripe:stripe-java:22.13.0")
 
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
+
+    // Resilience4j para Circuit Breaker
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-kotlin:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-bulkhead:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-timelimiter:2.1.0")
+
+    // Observabilidade
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+
     // Documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 
