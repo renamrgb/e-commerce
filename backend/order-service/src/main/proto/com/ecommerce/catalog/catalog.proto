@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package com.ecommerce.catalog;
+
+option java_multiple_files = true;
+option java_package = "com.ecommerce.catalog";
+option java_outer_classname = "CatalogProto";
+
+service ProductService {
+  rpc GetProductDetail(ProductDetailRequest) returns (ProductDetailResponse) {}
+  rpc GetProductsByIds(ProductsIdsRequest) returns (ProductsResponse) {}
+  rpc SearchProducts(SearchRequest) returns (ProductsResponse) {}
+}
+
+message ProductDetailRequest {
+  string id = 1;
+}
+
+message ProductsIdsRequest {
+  repeated string ids = 1;
+}
+
+message SearchRequest {
+  string query = 1;
+  string category_id = 2;
+  double min_price = 3;
+  double max_price = 4;
+  bool available_only = 5;
+  int32 page = 6;
+  int32 size = 7;
+  string sort_by = 8;
+  string sort_direction = 9;
+}
+
+message ProductDetailResponse {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  string price = 5;
+  int32 stock = 6;
+  bool available = 7;
+  string image_url = 8;
+  string category_id = 9;
+  string category_name = 10;
+  repeated ProductVariantResponse variants = 11;
+  string created_at = 12;
+  string updated_at = 13;
+}
+
+message ProductVariantResponse {
+  string id = 1;
+  string name = 2;
+  string price = 3;
+  int32 stock = 4;
+  bool available = 5;
+}
+
+message ProductsResponse {
+  repeated ProductDetailResponse products = 1;
+  int32 total_pages = 2;
+  int64 total_elements = 3;
+  int32 page = 4;
+  int32 size = 5;
+} 

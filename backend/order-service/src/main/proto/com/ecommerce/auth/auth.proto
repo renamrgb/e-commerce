@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package com.ecommerce.auth;
+
+option java_multiple_files = true;
+option java_package = "com.ecommerce.auth";
+option java_outer_classname = "AuthProto";
+
+// Serviço de Autenticação
+service AuthService {
+  // Validar um token JWT
+  rpc ValidateToken(AuthRequest) returns (AuthResponse) {}
+  
+  // Obter detalhes do usuário
+  rpc GetUserDetails(UserRequest) returns (UserDetailsResponse) {}
+}
+
+// Requisição para validação de token
+message AuthRequest {
+  string token = 1;
+}
+
+// Resposta de autenticação
+message AuthResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string email = 3;
+  repeated string roles = 4;
+}
+
+// Requisição para obter detalhes do usuário
+message UserRequest {
+  string user_id = 1;
+}
+
+// Resposta com detalhes do usuário
+message UserDetailsResponse {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string first_name = 4;
+  string last_name = 5;
+  repeated string roles = 6;
+  bool active = 7;
+  string created_at = 8;
+} 

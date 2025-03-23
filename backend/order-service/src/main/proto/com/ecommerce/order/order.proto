@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package com.ecommerce.order;
+
+option java_multiple_files = true;
+option java_package = "com.ecommerce.order";
+option java_outer_classname = "OrderProto";
+
+// Serviço de Pedidos
+service OrderService {
+  // Obter um pedido por ID
+  rpc GetOrder(OrderRequest) returns (OrderResponse) {}
+  
+  // Obter um pedido por número do pedido
+  rpc GetOrderByNumber(OrderNumberRequest) returns (OrderResponse) {}
+  
+  // Obter pedidos de um usuário
+  rpc GetUserOrders(UserOrdersRequest) returns (UserOrdersResponse) {}
+  
+  // Criar um pedido a partir de um carrinho
+  rpc CreateOrder(CreateOrderRequest) returns (OrderResponse) {}
+  
+  // Atualizar o status de um pedido
+  rpc UpdateOrderStatus(UpdateStatusRequest) returns (OrderResponse) {}
+  
+  // Cancelar um pedido
+  rpc CancelOrder(OrderRequest) returns (OrderResponse) {}
+  
+  // Obter estatísticas de pedidos de um usuário
+  rpc GetUserOrderStats(UserRequest) returns (UserOrderStatsResponse) {}
+}
+
+// Requisição para obter um pedido por ID
+message OrderRequest {
+  string order_id = 1;
+}
+
+// Requisição para obter um pedido por número
+message OrderNumberRequest {
+  string order_number = 1;
+}
+
+// Requisição para obter pedidos de um usuário
+message UserOrdersRequest {
+  string user_id = 1;
+  int32 page = 2;
+  int32 size = 3;
+}
+
+// Resposta com lista de pedidos de um usuário
+message UserOrdersResponse {
+  repeated OrderSummary orders = 1;
+  int32 total_pages = 2;
+  int64 total_elements = 3;
+  int32 page = 4;
+  int32 size = 5;
+}
+
+// Sumário de um pedido
+message OrderSummary {
+  string id = 1;
+  string order_number = 2;
+  string status = 3;
+  string total = 4;
+  int32 item_count = 5;
+  string created_at = 6;
+}
+
+// Requisição para criar um pedido
+message CreateOrderRequest {
+  string user_id = 1;
+  string cart_id = 2;
+  ShippingAddressProto shipping_address = 3;
+  PaymentInfoProto payment_info = 4;
+}
+
+// Endereço de entrega
+message ShippingAddressProto {
+  string recipient_name = 1;
+  string street = 2;
+  string number = 3;
+  string complement = 4;
+  string neighborhood = 5;
+  string city = 6;
+  string state = 7;
+  string zip_code = 8;
+  string country = 9;
+  string phone = 10;
+}
+
+// Informações de pagamento
+message PaymentInfoProto {
+  string method = 1;
+  string card_last_digits = 2;
+  int32 installments = 3;
+  string payment_id = 4;
+}
+
+// Requisição para atualizar o status de um pedido
+message UpdateStatusRequest {
+  string order_id = 1;
+  string status = 2;
+  string comment = 3;
+}
+
+// Requisição para obter informações do usuário
+message UserRequest {
+  string user_id = 1;
+}
+
+// Resposta com pedido completo
+message OrderResponse {
+  string id = 1;
+  string user_id = 2;
+  string order_number = 3;
+  string status = 4;
+  string subtotal = 5;
+  string shipping_cost = 6;
+  string discount = 7;
+  string tax = 8;
+  string total = 9;
+  string shipping_address = 10;
+  string payment_method = 11;
+  string payment_id = 12;
+  repeated OrderItemProto items = 13;
+  repeated StatusHistoryProto status_history = 14;
+  string created_at = 15;
+  string updated_at = 16;
+}
+
+// Item do pedido
+message OrderItemProto {
+  string id = 1;
+  string product_id = 2;
+  string product_name = 3;
+  string product_slug = 4;
+  string product_image = 5;
+  string variant_id = 6;
+  string variant_name = 7;
+  string price = 8;
+  int32 quantity = 9;
+  string total = 10;
+  string created_at = 11;
+}
+
+// Histórico de status do pedido
+message StatusHistoryProto {
+  string id = 1;
+  string status = 2;
+  string observation = 3;
+  string created_at = 4;
+}
+
+// Resposta de estatísticas de pedidos de um usuário
+message UserOrderStatsResponse {
+  int64 total_orders = 1;
+  int64 completed_orders = 2;
+  int64 cancelled_orders = 3;
+  string total_spent = 4;
+  int64 items_purchased = 5;
+} 
