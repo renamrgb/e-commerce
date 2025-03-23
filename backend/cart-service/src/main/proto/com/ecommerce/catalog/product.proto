@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package com.ecommerce.catalog;
+
+option java_multiple_files = true;
+option java_package = "com.ecommerce.catalog.grpc";
+option java_outer_classname = "ProductProto";
+
+service ProductService {
+  rpc GetProduct(ProductRequest) returns (ProductResponse) {}
+  rpc GetProductVariant(ProductVariantRequest) returns (ProductVariantResponse) {}
+}
+
+message ProductRequest {
+  string product_id = 1;
+}
+
+message ProductResponse {
+  string id = 1;
+  string name = 2;
+  string slug = 3;
+  string description = 4;
+  string sku = 5;
+  double price = 6;
+  string image_url = 7;
+  bool active = 8;
+  repeated ProductVariantResponse variants = 9;
+}
+
+message ProductVariantRequest {
+  string variant_id = 1;
+}
+
+message ProductVariantResponse {
+  string id = 1;
+  string name = 2;
+  string sku = 3;
+  double price = 4;
+  int32 stock_quantity = 5;
+  repeated AttributeValue attributes = 6;
+}
+
+message AttributeValue {
+  string name = 1;
+  string value = 2;
+} 
