@@ -55,6 +55,17 @@ kafka:
     value-serializer: org.apache.kafka.common.serialization.StringSerializer
     acks: all
 
+# Configurações do Outbox
+outbox:
+  scheduler:
+    process-events-interval: ${OUTBOX_PROCESS_INTERVAL:5000}  # 5 segundos
+    retry-events-interval: ${OUTBOX_RETRY_INTERVAL:60000}     # 1 minuto
+    stats-interval: ${OUTBOX_STATS_INTERVAL:300000}           # 5 minutos
+  processing:
+    max-retries: 5
+    retry-delay-minutes: 5
+    batch-size: 50
+
 # Configurações de Actuator
 management:
   endpoints:
@@ -152,14 +163,6 @@ resilience4j:
         limitForPeriod: 10
         limitRefreshPeriod: 1s
         timeoutDuration: 3s
-
-# Configurações do Springdoc OpenAPI
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: method
 
 # Configurações de Actuator
 management:

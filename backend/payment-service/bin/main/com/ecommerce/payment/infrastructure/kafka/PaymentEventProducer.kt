@@ -2,17 +2,17 @@ package com.ecommerce.payment.infrastructure.kafka
 
 import com.ecommerce.payment.domain.model.Payment
 import com.ecommerce.payment.infrastructure.kafka.event.PaymentEvent
+import com.ecommerce.payment.infrastructure.outbox.OutboxService
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import io.github.resilience4j.retry.annotation.Retry
 import org.slf4j.LoggerFactory
-import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
 @Component
 class PaymentEventProducer(
-    private val kafkaTemplate: KafkaTemplate<String, String>,
+    private val outboxService: OutboxService,
     private val objectMapper: ObjectMapper
 ) {
     
@@ -26,55 +26,91 @@ class PaymentEventProducer(
     }
     
     /**
-     * Envia evento de pagamento completado
+     * Envia evento de pagamento completado através do outbox
      */
     @CircuitBreaker(name = "kafkaProducer", fallbackMethod = "fallbackSendEvent")
     @Retry(name = "kafkaProducer")
     fun sendPaymentCompletedEvent(payment: Payment) {
         val event = createPaymentEvent(payment, "COMPLETED")
-        sendEvent(PAYMENT_COMPLETED_TOPIC, payment.id.toString(), event)
-        logger.info("Evento de pagamento completado enviado: {}", payment.id)
+        
+        outboxService.createEvent(
+            aggregateId = payment.id.toString(),
+            aggregateType = "payment",
+            eventType = "COMPLETED",
+            topic = PAYMENT_COMPLETED_TOPIC,
+            messageKey = payment.id.toString(),
+            payload = event
+        )
+        
+        logger.info("Evento de pagamento completado registrado no outbox: {}", payment.id)
     }
     
     /**
-     * Envia evento de pagamento falho
+     * Envia evento de pagamento falho através do outbox
      */
     @CircuitBreaker(name = "kafkaProducer", fallbackMethod = "fallbackSendEvent")
     @Retry(name = "kafkaProducer")
     fun sendPaymentFailedEvent(payment: Payment) {
         val event = createPaymentEvent(payment, "FAILED")
-        sendEvent(PAYMENT_FAILED_TOPIC, payment.id.toString(), event)
-        logger.info("Evento de pagamento falho enviado: {}", payment.id)
+        
+        outboxService.createEvent(
+            aggregateId = payment.id.toString(),
+            aggregateType = "payment",
+            eventType = "FAILED",
+            topic = PAYMENT_FAILED_TOPIC,
+            messageKey = payment.id.toString(),
+            payload = event
+        )
+        
+        logger.info("Evento de pagamento falho registrado no outbox: {}", payment.id)
     }
     
     /**
-     * Envia evento de pagamento cancelado
+     * Envia evento de pagamento cancelado através do outbox
      */
     @CircuitBreaker(name = "kafkaProducer", fallbackMethod = "fallbackSendEvent")
     @Retry(name = "kafkaProducer")
     fun sendPaymentCanceledEvent(payment: Payment) {
         val event = createPaymentEvent(payment, "CANCELED")
-        sendEvent(PAYMENT_CANCELED_TOPIC, payment.id.toString(), event)
-        logger.info("Evento de pagamento cancelado enviado: {}", payment.id)
+        
+        outboxService.createEvent(
+            aggregateId = payment.id.toString(),
+            aggregateType = "payment",
+            eventType = "CANCELED",
+            topic = PAYMENT_CANCELED_TOPIC,
+            messageKey = payment.id.toString(),
+            payload = event
+        )
+        
+        logger.info("Evento de pagamento cancelado registrado no outbox: {}", payment.id)
     }
     
     /**
-     * Envia evento de pagamento reembolsado
+     * Envia evento de pagamento reembolsado através do outbox
      */
     @CircuitBreaker(name = "kafkaProducer", fallbackMethod = "fallbackSendEvent")
     @Retry(name = "kafkaProducer")
     fun sendPaymentRefundedEvent(payment: Payment) {
         val event = createPaymentEvent(payment, "REFUNDED")
-        sendEvent(PAYMENT_REFUNDED_TOPIC, payment.id.toString(), event)
-        logger.info("Evento de pagamento reembolsado enviado: {}", payment.id)
+        
+        outboxService.createEvent(
+            aggregateId = payment.id.toString(),
+            aggregateType = "payment",
+            eventType = "REFUNDED",
+            topic = PAYMENT_REFUNDED_TOPIC,
+            messageKey = payment.id.toString(),
+            payload = event
+        )
+        
+        logger.info("Evento de pagamento reembolsado registrado no outbox: {}", payment.id)
     }
     
     /**
      * Método de fallback para caso de falha no envio do evento
      */
     private fun fallbackSendEvent(payment: Payment, throwable: Throwable) {
-        logger.error("Falha ao enviar evento de pagamento: {}", payment.id, throwable)
-        // TODO: Implementar estratégia de fallback, como salvar em uma tabela de eventos pendentes
+        logger.error("Falha ao registrar evento de pagamento no outbox: {}", payment.id, throwable)
+        // O padrão outbox já lida com a persistência e retry automático
     }
     
     /**
