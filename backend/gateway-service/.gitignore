@@ -1,0 +1,28 @@
+# Binários Go
+/bin/
+/gateway
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Diretórios e arquivos de build e teste
+/vendor/
+/Godeps/
+/go.work
+*.test
+*.out
+coverage.txt
+
+# Diretórios de dependências
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Arquivos de logs
+*.log
+
+# Arquivos de configuração local
+config.local.yaml 

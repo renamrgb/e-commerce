@@ -1,0 +1,35 @@
+server:
+  port: "8080"
+
+services:
+  catalog:
+    host: "catalog"
+    port: "8081"
+  order:
+    host: "order"
+    port: "8082"
+  cart:
+    host: "cart"
+    port: "8083"
+  user:
+    host: "user"
+    port: "8084"
+  payment:
+    host: "payment"
+    port: "8085"
+  inventory:
+    host: "inventory"
+    port: "8086"
+  notification:
+    host: "notification"
+    port: "8087"
+
+auth:
+  jwtsecret: "ecommerce-platform-jwt-secret-key"
+  tokenExpiry: 60  # 60 minutos
+
+cors:
+  allowedOrigins:
+    - "http://localhost:4200"
+    - "http://frontend:80"
+    - "http://frontend.ecommerce.local"
