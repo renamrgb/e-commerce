@@ -7,15 +7,21 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import io.github.resilience4j.retry.annotation.Retry
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
+import java.util.UUID
 
+/**
+ * Produtor de eventos relacionados a pagamentos
+ */
 @Component
 class PaymentEventProducer(
+    private val objectMapper: ObjectMapper,
     private val outboxService: OutboxService,
-    private val objectMapper: ObjectMapper
+    @Value("\${app.kafka.topics.payment-events}") private val paymentEventsTopic: String,
+    @Value("\${app.kafka.topics.notification-events:notification-events}") private val notificationEventsTopic: String
 ) {
-    
     private val logger = LoggerFactory.getLogger(PaymentEventProducer::class.java)
     
     companion object {
@@ -23,6 +29,73 @@ class PaymentEventProducer(
         const val PAYMENT_FAILED_TOPIC = "payment-service.payment.failed"
         const val PAYMENT_CANCELED_TOPIC = "payment-service.payment.canceled"
         const val PAYMENT_REFUNDED_TOPIC = "payment-service.payment.refunded"
+    }
+    
+    /**
+     * Envia um evento de pagamento para processamento assíncrono
+     */
+    fun sendPaymentEvent(payment: Payment) {
+        try {
+            logger.info("Enviando evento de pagamento: id={}, status={}", payment.id, payment.status)
+            
+            val event = PaymentEvent(
+                eventId = UUID.randomUUID().toString(),
+                paymentId = payment.id,
+                orderId = payment.orderId,
+                userId = payment.userId,
+                amount = payment.amount,
+                status = payment.status,
+                paymentIntentId = payment.paymentIntentId,
+                errorMessage = payment.errorMessage,
+                eventTimestamp = LocalDateTime.now()
+            )
+            
+            val payload = objectMapper.writeValueAsString(event)
+            
+            // Usando o sistema outbox para garantir a entrega
+            outboxService.createEvent(
+                aggregateId = payment.id,
+                aggregateType = "Payment", 
+                eventType = "PaymentStatusChanged",
+                topic = paymentEventsTopic,
+                messageKey = payment.id,
+                payload = payload
+            )
+            
+            logger.debug("Evento de pagamento registrado no outbox: {}", event.eventId)
+        } catch (e: Exception) {
+            logger.error("Erro ao enviar evento de pagamento: {}", e.message, e)
+            throw e
+        }
+    }
+    
+    /**
+     * Envia um evento de notificação relacionado a pagamento
+     */
+    fun sendNotificationEvent(notificationData: Map<String, Any>) {
+        try {
+            val eventId = notificationData["eventId"] as String
+            val eventType = notificationData["eventType"] as String
+            logger.info("Enviando evento de notificação: id={}, tipo={}", eventId, eventType)
+            
+            val payload = objectMapper.writeValueAsString(notificationData)
+            val aggregateId = eventId
+            
+            // Usando o sistema outbox para garantir a entrega
+            outboxService.createEvent(
+                aggregateId = aggregateId,
+                aggregateType = "Notification", 
+                eventType = eventType,
+                topic = notificationEventsTopic,
+                messageKey = aggregateId,
+                payload = payload
+            )
+            
+            logger.debug("Evento de notificação registrado no outbox: {}", eventId)
+        } catch (e: Exception) {
+            logger.error("Erro ao enviar evento de notificação: {}", e.message, e)
+            throw e
+        }
     }
     
     /**
