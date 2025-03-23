@@ -1,79 +1,78 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "3.1.5"
-    id("io.spring.dependency-management") version "1.1.3"
-    kotlin("jvm") version "1.8.22"
-    kotlin("plugin.spring") version "1.8.22"
-    kotlin("plugin.jpa") version "1.8.22"
+    id("org.springframework.boot") version "2.7.12"
+    id("io.spring.dependency-management") version "1.0.15.RELEASE"
+    kotlin("jvm") version "1.6.21"
+    kotlin("plugin.spring") version "1.6.21"
+    kotlin("plugin.jpa") version "1.6.21"
 }
 
 group = "com.ecommerce"
-version = "0.1.0-SNAPSHOT"
+version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 repositories {
     mavenCentral()
 }
 
+extra["springCloudVersion"] = "2021.0.7"
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+    }
+}
+
 dependencies {
-    // Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
-
+    implementation("org.springframework.kafka:spring-kafka")
+    
     // Kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-
+    
     // Database
     implementation("org.flywaydb:flyway-core")
     runtimeOnly("org.postgresql:postgresql")
-
-    // gRPC
-    implementation("io.grpc:grpc-protobuf:1.55.1")
-    implementation("io.grpc:grpc-stub:1.55.1")
-    implementation("io.grpc:grpc-netty-shaded:1.55.1")
-    implementation("net.devh:grpc-server-spring-boot-starter:2.14.0.RELEASE")
-    implementation("net.devh:grpc-client-spring-boot-starter:2.14.0.RELEASE")
-
-    // JWT
+    
+    // Resilience4j para circuit breaker e rate limiting
+    implementation("io.github.resilience4j:resilience4j-spring-boot2")
+    implementation("io.github.resilience4j:resilience4j-circuitbreaker")
+    implementation("io.github.resilience4j:resilience4j-ratelimiter")
+    implementation("io.github.resilience4j:resilience4j-retry")
+    
+    // Observabilidade
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("org.springframework.cloud:spring-cloud-starter-sleuth")
+    implementation("org.springframework.cloud:spring-cloud-sleuth-zipkin")
+    
+    // OpenAPI/Swagger documentação
+    implementation("org.springdoc:springdoc-openapi-ui:1.6.15")
+    implementation("org.springdoc:springdoc-openapi-kotlin:1.6.15")
+    implementation("org.springdoc:springdoc-openapi-data-rest:1.6.15")
+    
+    // JWT para autenticação
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
-
-    // Stripe Payment Integration
-    implementation("com.stripe:stripe-java:22.13.0")
-
-    // Kafka
-    implementation("org.springframework.kafka:spring-kafka")
-    testImplementation("org.springframework.kafka:spring-kafka-test")
-
-    // Resilience4j para Circuit Breaker
-    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-kotlin:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-retry:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-bulkhead:2.1.0")
-    implementation("io.github.resilience4j:resilience4j-timelimiter:2.1.0")
-
-    // Observabilidade
-    implementation("io.micrometer:micrometer-registry-prometheus")
-    implementation("io.micrometer:micrometer-tracing-bridge-brave")
-    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
-
-    // Documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
-
-    // Test
+    
+    // Stripe API para pagamentos
+    implementation("com.stripe:stripe-java:22.10.0")
+    
+    // Utilitários
+    implementation("org.json:json:20230227")
+    
+    // Testes
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("io.mockk:mockk:1.13.5")
     testImplementation("com.h2database:h2")
+    testImplementation("org.springframework.security:spring-security-test")
 }
 
 tasks.withType<KotlinCompile> {
